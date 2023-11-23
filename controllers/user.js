@@ -105,19 +105,18 @@ const newUser = async (req, res, next) => {
         return res.status(201).json({user: newUser})
     } catch (error) {
         next(error)
-    }   
+    }
 }
 
 const newUserDeck = async (req, res, next) => {
     const { userID } = req.value.params
-
     // Create a new deck
     const newDeck = new Deck(req.value.body)
 
     // Get user
     const user = await User.findById(userID)
 
-    // Assign user as a deck;s owner
+    // Assign user as a decks owner
     /*
         Sau quá trình newDeck ở trên, thì object đã trở thành object
         của mongoDB rồi, nên việc tạo thêm trường mới phải là một trong các

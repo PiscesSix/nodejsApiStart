@@ -15,6 +15,7 @@ mongoClinet.connect('mongodb://localhost/nodejsapistarter')
 const app = express()
 
 const userRoute = require('./routes/user')
+const deckRoute = require('./routes/deck')
 
 // Middlewares
 // logger sẽ chạy trước đến request nên được gọi là middleware
@@ -26,6 +27,7 @@ app.use(bodyParser.json())
 
 // Routes 
 app.use('/users', userRoute)
+app.use('/decks', deckRoute)
 
 // Routes
 app.get('/', (req, res, next) => {

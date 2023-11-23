@@ -26,13 +26,17 @@ router.route('/')
         .patch -> update User
 */
 
+/*
+    Mây hàm dưới này chạy trước controller (middleware)
+*/
+
 router.route('/:userID')
-    .get(validateParam(schemas.idSchema,'userID'),UserController.getUser)
+    .get(validateParam(schemas.idSchema,'userID'), UserController.getUser)
     .put(validateParam(schemas.idSchema, 'userID'), validateBody(schemas.userSchema), UserController.replaceUser)
     .patch(validateParam(schemas.idSchema, 'userID'), validateBody(schemas.userOptionalSchema), UserController.updateUser)
 
 router.route('/:userID/decks')
     .get(validateParam(schemas.idSchema, 'userID'), UserController.getUserDecks)
-    .post(validateParam(schemas.idSchema, validateBody(schemas.deckSchema), 'userID'), UserController.newUserDeck)
+    .post(validateParam(schemas.idSchema, 'userID'), validateBody(schemas.deckSchema), UserController.newUserDeck)
 
 module.exports = router
