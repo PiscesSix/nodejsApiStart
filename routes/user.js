@@ -37,6 +37,6 @@ router.route('/:userID')
 
 router.route('/:userID/decks')
     .get(validateParam(schemas.idSchema, 'userID'), UserController.getUserDecks)
-    .post(validateParam(schemas.idSchema, 'userID'), validateBody(schemas.deckSchema), UserController.newUserDeck)
+    .post(validateParam(schemas.idSchema, 'userID'), validateBody(schemas.newDeckSchema), UserController.newUserDeck)
 
 module.exports = router

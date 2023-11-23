@@ -9,6 +9,14 @@
 const Deck = require('../models/Deck')
 const User = require('../models/User')
 
+const nowTime = () => {
+    const currentDate = new Date();
+    const currentDayOfMonth = currentDate.getDate();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+    return `${currentDayOfMonth}/${currentMonth+1}/${currentYear} -- Time: ${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`
+}
+
 // Validator for parameters:
 // Nếu sai định dạng của phương thức GET thì không cho hoạt động
 const Joi = require('@hapi/joi')
@@ -99,13 +107,10 @@ thông qua POST từ sever của chúng ta. Vì vậy mới cần dùng body-par
 // }
 
 const newUser = async (req, res, next) => {
-    try {
-        const newUser = new User(req.value.body)
-        await newUser.save()
-        return res.status(201).json({user: newUser})
-    } catch (error) {
-        next(error)
-    }
+    const newUser = new User(req.value.body)
+    newUser.created_at = nowTime()
+    await newUser.save()
+    return res.status(201).json({user: newUser})
 }
 
 const newUserDeck = async (req, res, next) => {
@@ -122,13 +127,18 @@ const newUserDeck = async (req, res, next) => {
         của mongoDB rồi, nên việc tạo thêm trường mới phải là một trong các
         trường trong Desk -> Dù có tạo trường khác đi nữa cũng không có tác dụng gì 
     */
-    newDeck.owner = user
+    newDeck.owner = userID
+
+    // getTimeDeck
+    newDeck.created_at = nowTime()
 
     // Save the deck
     await newDeck.save()
 
     // add deck to user's deck array ('decks')
     user.decks.push(newDeck)
+    // getTimeUser
+    user.updated_at = nowTime()
 
     // Save the user, nguyên nhân lưu lại vì ta mới push một giá trị mới vào -> để mongo có thể biết được
     await user.save()
@@ -142,7 +152,13 @@ const replaceUser = async (req, res, next) => {
     const newUser = req.value.body
 
     const result = await User.findByIdAndUpdate(userID,newUser)
-    console.log(result)
+    
+    // getTime
+    const user = await User.findById(userID)
+    user.updated_at = nowTime()
+
+    await user.save()
+    // console.log(result)
     return res.status(200).json({success: true})
 }
 
@@ -152,7 +168,14 @@ const updateUser = async (req, res, next) => {
     const newUser = req.value.body
 
     const result = await User.findByIdAndUpdate(userID,newUser)
-    console.log(result)
+    
+    // getTime
+    const user = await User.findById(userID)
+    user.updated_at = nowTime()
+   
+    await user.save()
+
+    // console.log(result)
     return res.status(200).json({success: true})
 }
 

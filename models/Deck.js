@@ -11,9 +11,15 @@ const DeckSchema = new Schema({
     description: {
         type: String
     },
-    total: {
-        type: Number,
-        default: 0
+    is_deleted: {
+        type: Boolean,
+        default: false
+    },
+    updated_at: {
+        type: String
+    },
+    created_at: {
+        type: String
     },
     owner: {
         type: Schema.Types.ObjectId,

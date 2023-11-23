@@ -14,6 +14,16 @@ const UserSchema = new Schema({
     email: {
         type: String
     },
+    is_deleted: {
+        type: Boolean,
+        default: false
+    },
+    updated_at: {
+        type: String
+    },
+    created_at: {
+        type: String
+    },
     decks: [{
         type: Schema.Types.ObjectId,
         ref: 'Deck'

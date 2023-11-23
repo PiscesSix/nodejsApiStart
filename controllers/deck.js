@@ -8,6 +8,14 @@
 const Deck = require('../models/Deck')
 const User = require('../models/User')
 
+const nowTime = () => {
+    const currentDate = new Date();
+    const currentDayOfMonth = currentDate.getDate();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+    return `${currentDayOfMonth}/${currentMonth+1}/${currentYear} -- Time: ${currentDate.getTime()}`
+}
+
 // Validator for parameters:
 // Nếu sai định dạng của phương thức GET thì không cho hoạt động
 const Joi = require('@hapi/joi')
@@ -17,8 +25,8 @@ const idSchema = Joi.object().keys({
 
 const getDeck = async (req, res, next) => {
     const resultValidator = idSchema.validate(req.value.params)
-    
-    const { deckID } = req.params
+
+    // const { deckID } = req.params
 
     const deck = await Deck.findById(req.value.params.deckID)
     return res.status(200).json({deck})
@@ -39,6 +47,10 @@ const newDeck = async (req, res, next) => {
 
     deck.owner = owner._id
     const newDeck = new Deck(deck)
+
+    // Get time
+    newDeck.created_at = nowTime()
+    
     await newDeck.save()
 
     // Add newly created deck to the actual decks
@@ -54,23 +66,36 @@ const replaceDeck = async (req, res, next) => {
 
     // if put user, remove deck in user's model
     const result = await Deck.findByIdAndUpdate(deckID,newDeck)
+
+    // getTime
+    const deck = await Deck.findById(deckID)
+    deck.updated_at = nowTime()
+
+    await deck.save()
     return res.status(200).json({success: true})
 }
 
 const updateDeck = async (req, res, next) => {
     const { deckID } = req.value.params
     const newDeck = req.value.body
-    // if put user, remove deck in user's model
 
-    const result = await User.findByIdAndUpdate(deckID,newDeck)
+    // if put user, remove deck in user's model
+    const result = await Deck.findByIdAndUpdate(deckID,newDeck)
+    
+    // getTime
+    const deck = await Deck.findById(deckID)
+    deck.updated_at = nowTime()
+    await deck.save()
+
     return res.status(200).json({success: true})
 }
 
 const deleteDeck = async (req, res, next) => {
-    const { deckID } = re.value.params
-    
-    // Get a deck
-    const deck = await Deck.findById(deckID)
+    // Find is_deleted in deck
+    const deck = await Deck.findById(req.value.params.deckID)
+    deck.is_deleted = !(deck.is_deleted)
+    await deck.save()
+    return res.status(200).json({success: true})
 }
 
 module.exports = {
@@ -78,5 +103,6 @@ module.exports = {
     newDeck,
     index,
     replaceDeck,
-    updateDeck
+    updateDeck,
+    deleteDeck
 }
