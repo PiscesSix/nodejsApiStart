@@ -16,19 +16,11 @@ const idSchema = Joi.object().keys({
 })
 
 const getDeck = async (req, res, next) => {
-    const resultValidator = idSchema.validate(req.params)
+    const resultValidator = idSchema.validate(req.value.params)
     
-    // console.log('req params ', req.params)
     const { deckID } = req.params
 
-    /*
-    Tại sao dùng findOne:
-        + findById là hàm có ý nghĩa tìm trường _id
-        + findOne -> cũng tìm ra single document nhưng tìm đa dạng hơn
-    Cho nên sử dụng hàm đúng mục đích của mình.
-    */
-    const deck = await Deck.findById(deckID)
-    // console.log('user info', user)
+    const deck = await Deck.findById(req.value.params.deckID)
     return res.status(200).json({deck})
 }
 
@@ -56,8 +48,35 @@ const newDeck = async (req, res, next) => {
     return res.status(201).json({deck: newDeck})
 }
 
+const replaceDeck = async (req, res, next) => {
+    const { deckID } = req.value.params
+    const newDeck = req.value.body
+
+    // if put user, remove deck in user's model
+    const result = await Deck.findByIdAndUpdate(deckID,newDeck)
+    return res.status(200).json({success: true})
+}
+
+const updateDeck = async (req, res, next) => {
+    const { deckID } = req.value.params
+    const newDeck = req.value.body
+    // if put user, remove deck in user's model
+
+    const result = await User.findByIdAndUpdate(deckID,newDeck)
+    return res.status(200).json({success: true})
+}
+
+const deleteDeck = async (req, res, next) => {
+    const { deckID } = re.value.params
+    
+    // Get a deck
+    const deck = await Deck.findById(deckID)
+}
+
 module.exports = {
     getDeck,
     newDeck,
     index,
+    replaceDeck,
+    updateDeck
 }

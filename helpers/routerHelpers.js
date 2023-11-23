@@ -58,6 +58,13 @@ const schemas = {
         email: Joi.string().email()
     }),
 
+    // Bản chất là chỉ cần update một trong các trường nên không cần phải có require()
+    deckOptionalSchema: Joi.object().keys({
+        name: Joi.string().min(6),
+        description: Joi.string().min(10),
+        owner: Joi.string().regex(/^[0-9a-zA-Z]{24}$/)
+    }),
+
     deckSchema: Joi.object().keys({
         name: Joi.string().min(6).required(),
         description: Joi.string().min(10).required(),

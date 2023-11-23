@@ -17,7 +17,7 @@ router.route('/')
 
 router.route('/:deckID')
     .get(validateParam(schemas.idSchema,'deckID'), DeckController.getDeck)
-    // .put(validateParam(schemas.idSchema, 'deckID'), validateBody(schemas.deckSchema), DeckController.replaceUser)
-    // .patch(validateParam(schemas.idSchema, 'deckID'), validateBody(schemas.userOptionalSchema), UserController.updateUser)
+    .put(validateParam(schemas.idSchema, 'deckID'), validateBody(schemas.deckSchema), DeckController.replaceDeck)
+    .patch(validateParam(schemas.idSchema, 'deckID'), validateBody(schemas.deckOptionalSchema), DeckController.updateDeck)
 
 module.exports = router
