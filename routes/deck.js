@@ -13,6 +13,11 @@ const { validateBody, validateParam, schemas } = require('../helpers/routerHelpe
 
 router.route('/')
     .get(DeckController.index)
-    .post(DeckController.newDeck)
+    .post(validateBody(schemas.newDeckSchema), DeckController.newDeck)
+
+router.route('/:deckID')
+    .get(validateParam(schemas.idSchema,'deckID'), DeckController.getDeck)
+    // .put(validateParam(schemas.idSchema, 'deckID'), validateBody(schemas.deckSchema), DeckController.replaceUser)
+    // .patch(validateParam(schemas.idSchema, 'deckID'), validateBody(schemas.userOptionalSchema), UserController.updateUser)
 
 module.exports = router

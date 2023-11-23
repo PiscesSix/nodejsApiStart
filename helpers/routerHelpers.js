@@ -20,9 +20,9 @@ const validateBody = (schema) => {
 const validateParam = (schema, name) => {
     return (req, res, next) => {
         
-        console.log('params:', req.params[name])
+        // console.log('params:', req.params[name])
         const validatorResult = schema.validate({param: req.params[name]})
-        console.log('result ', validatorResult)
+        // console.log('result ', validatorResult)
 
         if (validatorResult.error) {
             return res.status(400).json(validatorResult.error)
@@ -38,6 +38,12 @@ const validateParam = (schema, name) => {
 const schemas = {
     idSchema: Joi.object().keys({
         param: Joi.string().regex(/^[0-9a-zA-Z]{24}$/).required()
+    }),
+
+    newDeckSchema: Joi.object().keys({
+        name: Joi.string().min(6).required(),
+        description: Joi.string().min(10).required(),
+        owner: Joi.string().regex(/^[0-9a-zA-Z]{24}$/).required()
     }),
 
     userSchema: Joi.object().keys({
