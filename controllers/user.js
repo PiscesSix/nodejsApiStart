@@ -8,6 +8,7 @@
 
 const Deck = require('../models/Deck')
 const User = require('../models/User')
+const Counter = require('../models/Counter')
 
 const nowTime = () => {
     const currentDate = new Date();
@@ -109,6 +110,17 @@ thông qua POST từ sever của chúng ta. Vì vậy mới cần dùng body-par
 const newUser = async (req, res, next) => {
     const newUser = new User(req.value.body)
     newUser.created_at = nowTime()
+    const updateSeq = await Counter.findOneAndUpdate({name: "user"},{"$inc":{seq:1}},{new: true})
+    
+    if (updateSeq == null) {
+        const initCounter = Counter({name: "user", seq: 1})
+        console.log(initCounter)
+        newUser._id = 1
+        await initCounter.save()
+    } else {
+        newUser._id = updateSeq.seq
+    }
+
     await newUser.save()
     return res.status(201).json({user: newUser})
 }
@@ -117,7 +129,7 @@ const newUserDeck = async (req, res, next) => {
     const { userID } = req.value.params
     // Create a new deck
     const newDeck = new Deck(req.value.body)
-
+    console.log(typeof userID)
     // Get user
     const user = await User.findById(userID)
 
@@ -127,22 +139,33 @@ const newUserDeck = async (req, res, next) => {
         của mongoDB rồi, nên việc tạo thêm trường mới phải là một trong các
         trường trong Desk -> Dù có tạo trường khác đi nữa cũng không có tác dụng gì 
     */
-    newDeck.owner = userID
+
+    newDeck.owner = parseInt(userID)
 
     // getTimeDeck
     newDeck.created_at = nowTime()
 
-    // Save the deck
-    await newDeck.save()
+    const updateSeq = await Counter.findOneAndUpdate({name: "deck"},{"$inc":{seq:1}},{new: true})
+    if (updateSeq == null) {
+        const initCounter = Counter({name: "deck", seq: 1})
+        newDeck._id = 1
+        await initCounter.save()
+    } else {
+        newDeck._id = updateSeq.seq
+    }
 
     // add deck to user's deck array ('decks')
     user.decks.push(newDeck)
+
     // getTimeUser
     user.updated_at = nowTime()
 
     // Save the user, nguyên nhân lưu lại vì ta mới push một giá trị mới vào -> để mongo có thể biết được
     await user.save()
 
+    // Save the deck
+    await newDeck.save()
+    
     return res.status(201).json({deck: newDeck})
 }
 

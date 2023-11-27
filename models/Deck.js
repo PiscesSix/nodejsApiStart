@@ -5,6 +5,9 @@ const Schema = mongoose.Schema
 
 // Tìm hiểu thêm về schema và decks
 const DeckSchema = new Schema({
+    _id: {
+        type: Number
+    },
     name: {
         type: String
     },
@@ -22,10 +25,14 @@ const DeckSchema = new Schema({
         type: String
     },
     owner: {
-        type: Schema.Types.ObjectId,
+        type: Schema.Types.Number,
         ref: 'User'
     }
-})
+},
+{
+    _id: false
+}
+)
 
 const Deck = mongoose.model('Deck', DeckSchema)
 module.exports = Deck

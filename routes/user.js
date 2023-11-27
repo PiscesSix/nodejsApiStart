@@ -14,9 +14,9 @@ const { validateBody, validateParam, schemas } = require('../helpers/routerHelpe
 router.route('/')
     .get(UserController.index)
     .post(validateBody(schemas.userSchema), UserController.newUser)
-    .patch()
-    .put()
-    .delete()
+    // .patch()
+    // .put()
+    // .delete()
 
 // Lấy thông tin của một user -> param nên có dấu ":" 
 

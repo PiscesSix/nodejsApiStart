@@ -7,6 +7,7 @@
 
 const Deck = require('../models/Deck')
 const User = require('../models/User')
+const Counter = require('../models/Counter')
 
 const nowTime = () => {
     const currentDate = new Date();
@@ -50,7 +51,16 @@ const newDeck = async (req, res, next) => {
 
     // Get time
     newDeck.created_at = nowTime()
-    
+
+    const updateSeq = await Counter.findOneAndUpdate({name: "deck"},{"$inc":{seq:1}},{new: true})
+    if (updateSeq == null) {
+        const initCounter = Counter({name: "deck", seq: 1})
+        newDeck._id = 1
+        await initCounter.save()
+    } else {
+        newDeck._id = updateSeq.seq
+    }
+
     await newDeck.save()
 
     // Add newly created deck to the actual decks

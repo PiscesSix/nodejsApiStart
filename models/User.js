@@ -5,6 +5,9 @@ const Schema = mongoose.Schema
 
 // Tìm hiểu thêm về schema và decks
 const UserSchema = new Schema({
+    _id: {
+        type: Number
+    },
     firstName: {
         type: String
     },
@@ -25,9 +28,12 @@ const UserSchema = new Schema({
         type: String
     },
     decks: [{
-        type: Schema.Types.ObjectId,
+        type: Schema.Types.Number,
         ref: 'Deck'
     }]
+},
+{
+    _id: false
 })
 
 const User = mongoose.model('User', UserSchema)

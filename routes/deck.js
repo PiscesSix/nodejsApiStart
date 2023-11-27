@@ -13,7 +13,7 @@ const { validateBody, validateParam, schemas } = require('../helpers/routerHelpe
 
 router.route('/')
     .get(DeckController.index)
-    .post(validateBody(schemas.newDeckSchema), DeckController.newDeck)
+    .post(validateBody(schemas.deckSchema), DeckController.newDeck)
 
 router.route('/:deckID')
     .get(validateParam(schemas.idSchema,'deckID'), DeckController.getDeck)

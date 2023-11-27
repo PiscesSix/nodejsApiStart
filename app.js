@@ -25,7 +25,7 @@ app.use(logger('dev'))
 // sử dụng bodyParser
 app.use(bodyParser.json())
 
-// Routes 
+// Routes
 app.use('/users', userRoute)
 app.use('/decks', deckRoute)
 
@@ -57,7 +57,6 @@ app.use((err, req, res, next) => {
             message: error.message
         }
     })
-
 })
 
 // Start the server
