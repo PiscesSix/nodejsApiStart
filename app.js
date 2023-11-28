@@ -1,3 +1,6 @@
+// config env
+require('dotenv').config()
+
 // yarn init -> tạo json
 // yarn express -> node_modules (chứa source code của các thư viện) + yarn.lock (lưu lịch sử)
 

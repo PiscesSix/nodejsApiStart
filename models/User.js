@@ -15,7 +15,14 @@ const UserSchema = new Schema({
         type: String
     },
     email: {
-        type: String
+        type: String,
+        require: true, // Yêu cầu luôn phải có email
+        unique: true, // Yêu cầu email luôn là duy nhất => Trước khi thử tính năng này, remove all documents from the users collection.
+        lowercase: true
+    },
+    password: {
+        type: String,
+        require: true
     },
     is_deleted: {
         type: Boolean,

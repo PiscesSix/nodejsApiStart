@@ -10,6 +10,19 @@ const Deck = require('../models/Deck')
 const User = require('../models/User')
 const Counter = require('../models/Counter')
 
+// encode
+const { JWT_SECRET } = require('../config/index')
+const JWT = require('jsonwebtoken')
+
+const encodedToken = (userID) => {
+  return JWT.sign({
+    iss: 'Minh Chi',   // Nguoi phat hanh
+    sub: userID, // Chứa thông tin mình muốn để định danh cho user đó, thông tin này nên là duy nhất
+    iat: new Date().getTime(),
+    exp: new Date().setDate(new Date().getDate() + 3) // Hết hạn trong 3 ngày
+  }, JWT_SECRET) 
+}
+
 const nowTime = () => {
     const currentDate = new Date();
     const currentDayOfMonth = currentDate.getDate();
@@ -62,7 +75,7 @@ const getUser = async (req, res, next) => {
     const user = await User.findById(userID)
     // console.log('user info', user)
     return res.status(200).json({user})
-}
+};
 
 const getUserDecks = async (req, res, next) => {
     const { userID } = req.value.params
@@ -71,7 +84,7 @@ const getUserDecks = async (req, res, next) => {
     const user = await User.findById(userID).populate('decks')
 
     return res.status(200).json({decks: user.decks}) 
-}
+};
 
 const index = async (req, res, next) => {
     // viết try-catch để bắt lỗi
@@ -84,7 +97,7 @@ const index = async (req, res, next) => {
     } catch (error) {
         next(error)
     }
-}
+};
 
 /* Ta tiến hành tạo một user mới, và thông qua phương thức post để đẩy thông tin user lên, 
 tuy nhiên, kết quả sẽ là undefined vì không có config để nodejs nhận được (thông tin json) 
@@ -114,16 +127,14 @@ const newUser = async (req, res, next) => {
     
     if (updateSeq == null) {
         const initCounter = Counter({name: "user", seq: 1})
-        console.log(initCounter)
         newUser._id = 1
         await initCounter.save()
     } else {
         newUser._id = updateSeq.seq
     }
-
     await newUser.save()
     return res.status(201).json({user: newUser})
-}
+};
 
 const newUserDeck = async (req, res, next) => {
     const { userID } = req.value.params
@@ -167,7 +178,7 @@ const newUserDeck = async (req, res, next) => {
     await newDeck.save()
     
     return res.status(201).json({deck: newDeck})
-}
+};
 
 const replaceUser = async (req, res, next) => {
     // Thay thế toàn bộ thông tin của user đó (enforce new user to old user)
@@ -183,7 +194,41 @@ const replaceUser = async (req, res, next) => {
     await user.save()
     // console.log(result)
     return res.status(200).json({success: true})
-}
+};
+
+const secret = async (req, res, next) => {
+    console.log('secret')
+};
+
+const signUp = async (req, res, next) => {    
+    // Nên lấy từng thành phần để tránh lỗi sau này không đáng có
+    const { firstName, lastName, email, password } = req.value.body
+
+    // Check if the user has same email
+    const foundUser = await User.findOne({ email })
+    if (foundUser) return res.status(403).json( {error: { message: "Email is already in usee." }})
+
+    const newUser = User({ firstName, lastName, email, password })
+
+    const updateSeq = await Counter.findOneAndUpdate({name: "user"},{"$inc":{seq:1}},{new: true})
+    if (updateSeq == null) {
+        const initCounter = Counter({name: "user", seq: 1})
+        newUser._id = 1
+        await initCounter.save()
+    } else {
+        newUser._id = updateSeq.seq
+    }
+
+    await newUser.save()
+
+    const token = encodedToken(newUser._id)
+    res.setHeader('Author', token)
+    return res.status(201).json({user: newUser}) // Không nên trả token vào json -> Làm vậy thì quá nổi bật
+};
+
+const signIn = async (req, res, next) => {
+    console.log('signIn')
+};
 
 const updateUser = async (req, res, next) => {
     // Update một trong các trường (number of fields)
@@ -209,5 +254,8 @@ module.exports = {
     newUser,
     newUserDeck,
     replaceUser,
+    secret,
+    signUp,
+    signIn,
     updateUser,
 }
