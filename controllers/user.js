@@ -1,7 +1,7 @@
 /*
 * We can interact with mongoose in three different ways
 * [v] Promises
-* [x] Async (Dùng nếu có trả ra kết quả, return)/await (dùng khi không trả ra kết quả)
+* [v] Async (Dùng nếu có trả ra kết quả, return)/await (dùng khi không trả ra kết quả)
 */
 
 // nên sắp xếp tên hàm theo thứ tự alphabel
@@ -11,7 +11,7 @@ const User = require('../models/User')
 const Counter = require('../models/Counter')
 
 // encode
-const { JWT_SECRET } = require('../config/index')
+const { JWT_SECRET } = require('../configs/index')
 const JWT = require('jsonwebtoken')
 
 const encodedToken = (userID) => {
@@ -20,8 +20,8 @@ const encodedToken = (userID) => {
     sub: userID, // Chứa thông tin mình muốn để định danh cho user đó, thông tin này nên là duy nhất
     iat: new Date().getTime(),
     exp: new Date().setDate(new Date().getDate() + 3) // Hết hạn trong 3 ngày
-  }, JWT_SECRET) 
-}
+  }, JWT_SECRET)
+};
 
 const nowTime = () => {
     const currentDate = new Date();
@@ -29,14 +29,14 @@ const nowTime = () => {
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
     return `${currentDayOfMonth}/${currentMonth+1}/${currentYear} -- Time: ${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`
-}
+};
 
 // Validator for parameters:
 // Nếu sai định dạng của phương thức GET thì không cho hoạt động
 const Joi = require('@hapi/joi')
 const idSchema = Joi.object().keys({
     userID: Joi.string().regex(/^[0-9a-zA-Z]{24}$/).required()
-})
+});
 
 // Promise way
 // const index = (req, res, next) => {
@@ -197,7 +197,7 @@ const replaceUser = async (req, res, next) => {
 };
 
 const secret = async (req, res, next) => {
-    console.log('secret')
+  return res.status(200).json({ resources: true })
 };
 
 const signUp = async (req, res, next) => {    
@@ -227,7 +227,9 @@ const signUp = async (req, res, next) => {
 };
 
 const signIn = async (req, res, next) => {
-    console.log('signIn')
+  const token = encodedToken(req.user._id)
+  res.setHeader('Authorization', token)
+  return res.status(200).json({ success: true })
 };
 
 const updateUser = async (req, res, next) => {
@@ -245,7 +247,7 @@ const updateUser = async (req, res, next) => {
 
     // console.log(result)
     return res.status(200).json({success: true})
-}
+};
 
 module.exports = {
     getUser,

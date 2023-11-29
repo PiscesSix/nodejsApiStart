@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const bcrypt = require('bcryptjs')
 
 // schema là một lớp định hình xem connection của một user gồm có những field nào
 const Schema = mongoose.Schema
@@ -42,6 +43,33 @@ const UserSchema = new Schema({
 {
     _id: false
 })
+
+
+// Xử lý trước khi lưu
+UserSchema.pre('save', async function(next) {
+  try {
+    console.log('password ',this.password)
+    // Generate a salt
+    const salt = await bcrypt.genSalt(10)
+    console.log('salt ', salt)
+    // Generate a password hash (salt + hash)
+    const passwordHased = bcrypt.hash(this.password, salt)
+    console.log('password hashed ', passwordHased)
+    // Re-assign password hashed
+    this.password = passwordHased
+    next()
+  } catch (error) {
+    next(error)
+  }
+})
+
+UserSchema.methods.isValiedPassword = async function(newPassword) {
+  try {
+    return await bcrypt.compare(newPassword,this.password)
+  } catch (error) {
+    throw new Error(error)
+  }
+}
 
 const User = mongoose.model('User', UserSchema)
 module.exports = User
