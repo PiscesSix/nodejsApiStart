@@ -23,14 +23,10 @@ const encodedToken = (userID) => {
   }, JWT_SECRET)
 };
 
-const checkUserDele = async (req, res, next, user) => {
-  if (user.is_deleted) return res.status(404).json({
-    error: {
-      message: "Not exist this user !!!"
-    }
-  })
-
-  return false
+const checkUserDele = (req, res, next, user) => {
+  if ((user == null) || (user == undefined) || (user.is_deleted == true)) {
+    throw new Error("User not Exist")
+  };
 }
 
 const nowTime = () => {
@@ -73,18 +69,7 @@ const idSchema = Joi.object().keys({
 const deleteUser = async (req, res, next) => {
     const user = await User.findById(req.value.params.userID)
     const userDele = checkUserDele(req, res, next, user)
-
-    for (const deckID in user.decks) {
-        const deck = await Deck.findById(deckID)
-        deck.owner = -1
-        console.log()
-        await deck.save()
-    }
-
-    if (!user.is_deleted) {
-      user.is_deleted = true
-    }
-
+    user.is_deleted = true
     await user.save()
 
     return res.status(200).json({success: true})
@@ -94,7 +79,8 @@ const getUser = async (req, res, next) => {
     // const resultValidator = idSchema.validate(req.params)
     // console.log(resultValidator)
     // console.log('req params ', req.params)
-    const user = await User.findById(userID)
+    
+    const user = await User.findById(req.value.params)
     const checkUserDele = async (req, res, next, user)
     /*
     Tại sao dùng findOne:

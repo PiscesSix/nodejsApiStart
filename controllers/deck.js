@@ -16,12 +16,9 @@ const nowTime = () => {
 }
 
 const checkDeckDele = async (req, res, next, deck) => {
-    if (deck.is_deleted) return res.status(404).json({
-      error: {
-        message: "Not exist this deck !!!"
-      }
-    })
-
+    if (deck.is_deleted) {
+      throw new Error("User not Exist")
+    }
     return false
 }
 
@@ -82,11 +79,27 @@ const replaceDeck = async (req, res, next) => {
     const deck = await Deck.findById(deckID)
     const checkDele = await checkDeckDele(req, res, next, deck);
     // if put user, remove deck in user's model
+    
+    const userHaveDeck = await User.findById(deck.owner)
+    let index = userHaveDeck.decks.indexOf(deck._id);
+    if (index !== -1) {
+      userHaveDeck.decks.splice(index, 1);
+      await userHaveDeck.save()
+    } else {
+      await userHaveDeck.save()
+    }
+    await userHaveDeck.save()
+
+    if (!newDeck.owner) {
+      const user = await User.findById(newDeck.owner)
+      user.owner.push(newDeck._id)
+      await user.save()
+    }
     const result = await Deck.findByIdAndUpdate(deckID,newDeck)
     // getTime
     deck.updated_at = nowTime()
-    await deck.save()
     
+    await deck.save()
     return res.status(200).json({success: true})
 }
 
