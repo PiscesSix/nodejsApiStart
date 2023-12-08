@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
 
+const SALT_WORK_FACTOR = 10
 // schema là một lớp định hình xem connection của một user gồm có những field nào
 const Schema = mongoose.Schema
 
@@ -47,19 +48,13 @@ const UserSchema = new Schema({
 
 // Xử lý trước khi lưu
 UserSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next()
   try {
-    console.log('password ',this.password)
-    // Generate a salt
-    const salt = await bcrypt.genSalt(10)
-    console.log('salt ', salt)
-    // Generate a password hash (salt + hash)
-    const passwordHased = bcrypt.hash(this.password, salt)
-    console.log('password hashed ', passwordHased)
-    // Re-assign password hashed
-    this.password = passwordHased
-    next()
+    const salt = await bcrypt.genSalt(SALT_WORK_FACTOR);
+    this.password = await bcrypt.hash(this.password, salt)
+    return next()
   } catch (error) {
-    next(error)
+    return next(error)
   }
 })
 

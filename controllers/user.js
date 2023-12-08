@@ -23,11 +23,22 @@ const encodedToken = (userID) => {
   }, JWT_SECRET)
 };
 
+const checkUserDele = async (req, res, next, user) => {
+  if (user.is_deleted) return res.status(404).json({
+    error: {
+      message: "Not exist this user !!!"
+    }
+  })
+
+  return false
+}
+
 const nowTime = () => {
     const currentDate = new Date();
     const currentDayOfMonth = currentDate.getDate();
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
+
     return `${currentDayOfMonth}/${currentMonth+1}/${currentYear} -- Time: ${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`
 };
 
@@ -59,28 +70,56 @@ const idSchema = Joi.object().keys({
 
 // }
 
-const getUser = async (req, res, next) => {
-    const resultValidator = idSchema.validate(req.params)
-    console.log(resultValidator)
-    
-    // console.log('req params ', req.params)
-    const { userID } = req.params
+const deleteUser = async (req, res, next) => {
+    const user = await User.findById(req.value.params.userID)
+    const userDele = checkUserDele(req, res, next, user)
 
+    for (const deckID in user.decks) {
+        const deck = await Deck.findById(deckID)
+        deck.owner = -1
+        console.log()
+        await deck.save()
+    }
+
+    if (!user.is_deleted) {
+      user.is_deleted = true
+    }
+
+    await user.save()
+
+    return res.status(200).json({success: true})
+};
+
+const getUser = async (req, res, next) => {
+    // const resultValidator = idSchema.validate(req.params)
+    // console.log(resultValidator)
+    // console.log('req params ', req.params)
+    const user = await User.findById(userID)
+    const checkUserDele = async (req, res, next, user)
     /*
     Tại sao dùng findOne:
         + findById là hàm có ý nghĩa tìm trường _id
         + findOne -> cũng tìm ra single document nhưng tìm đa dạng hơn
     Cho nên sử dụng hàm đúng mục đích của mình.
     */
-    const user = await User.findById(userID)
     // console.log('user info', user)
     return res.status(200).json({user})
 };
 
+const getUserList = async (req, res, next) => {
+    const { userListID } = req.params
+    //  userListID.id 
+}
+
 const getUserDecks = async (req, res, next) => {
     const { userID } = req.value.params
-
-    // Get user - populate(name field want to join)
+    if (userID.is_deleted){
+      return res.status(403).json({
+        error: {
+          message: "User isn't exist"
+        }
+      })
+    }
     const user = await User.findById(userID).populate('decks')
 
     return res.status(200).json({decks: user.decks}) 
@@ -127,7 +166,7 @@ const newUser = async (req, res, next) => {
     
     if (updateSeq == null) {
         const initCounter = Counter({name: "user", seq: 1})
-        newUser._id = 1
+        newUser._id = initCounter.seq
         await initCounter.save()
     } else {
         newUser._id = updateSeq.seq
@@ -250,8 +289,10 @@ const updateUser = async (req, res, next) => {
 };
 
 module.exports = {
+    deleteUser,
     getUser,
     getUserDecks,
+    getUserList,
     index,
     newUser,
     newUserDeck,

@@ -43,8 +43,10 @@ router.route('/secret').get(passport.authenticate('jwt', {session: false}), User
 
 router.route('/:userID')
     .get(validateParam(schemas.idSchema,'userID'), UserController.getUser)
+    .post(UserController.getUserList)
     .put(validateParam(schemas.idSchema, 'userID'), validateBody(schemas.userSchema), UserController.replaceUser)
     .patch(validateParam(schemas.idSchema, 'userID'), validateBody(schemas.userOptionalSchema), UserController.updateUser)
+    .delete(validateParam(schemas.idSchema,'userID'), UserController.deleteUser)
 
 router.route('/:userID/decks')
     .get(validateParam(schemas.idSchema, 'userID'), UserController.getUserDecks)
