@@ -1,70 +1,35 @@
-/*
-* We can interact with mongoose in three different ways
-* [v] Promises
-* [v] Async (Dùng nếu có trả ra kết quả, return)/await (dùng khi không trả ra kết quả)
-*/
-
-// nên sắp xếp tên hàm theo thứ tự alphabel
-
 const Deck = require('../models/Deck')
 const User = require('../models/User')
 const Counter = require('../models/Counter')
 
-// encode
 const { JWT_SECRET } = require('../configs/index')
 const JWT = require('jsonwebtoken')
 
 const encodedToken = (userID) => {
   return JWT.sign({
-    iss: 'Minh Chi',   // Nguoi phat hanh
-    sub: userID, // Chứa thông tin mình muốn để định danh cho user đó, thông tin này nên là duy nhất
+    iss: 'Minh Chi',
+    sub: userID,
     iat: new Date().getTime(),
-    exp: new Date().setDate(new Date().getDate() + 3) // Hết hạn trong 3 ngày
+    exp: new Date().setDate(new Date().getDate() + 3)
   }, JWT_SECRET)
 };
 
 const checkUserDele = (req, res, next, user) => {
-  if ((user == null) || (user == undefined) || (user.is_deleted == true)) {
+  if ((user == null) || (user == undefined) || (user.is_deleted)) {
     throw new Error("User not Exist")
   };
 }
 
 const nowTime = () => {
     const currentDate = new Date();
-    const currentDayOfMonth = currentDate.getDate();
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear();
 
-    return `${currentDayOfMonth}/${currentMonth+1}/${currentYear} -- Time: ${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`
+    return `${currentDate.getDate()}/${currentDate.getMonth()+1}/${currentDate.getFullYear()} -- Time: ${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`
 };
 
-// Validator for parameters:
-// Nếu sai định dạng của phương thức GET thì không cho hoạt động
 const Joi = require('@hapi/joi')
 const idSchema = Joi.object().keys({
     userID: Joi.string().regex(/^[0-9a-zA-Z]{24}$/).required()
 });
-
-// Promise way
-// const index = (req, res, next) => {
-//     // Vào trong collections User tìm tất cả records
-//     User.find({}).then(users => {
-//         console.log('Found users', users);
-//         return res.status(200).json({users})
-//     })
-//     .catch(err => {
-//         next(err)
-//     });
-
-//     // return res.status(200).json({
-//     //     message: 'You requested to user handle'
-//     // })
-// }
-
-// Async/await
-// const index = async function(req, res, next) {
-
-// }
 
 const deleteUser = async (req, res, next) => {
     const user = await User.findById(req.value.params.userID)
@@ -76,19 +41,8 @@ const deleteUser = async (req, res, next) => {
 };
 
 const getUser = async (req, res, next) => {
-    // const resultValidator = idSchema.validate(req.params)
-    // console.log(resultValidator)
-    // console.log('req params ', req.params)
-    
     const user = await User.findById(req.value.params)
     const checkUserDele = async (req, res, next, user)
-    /*
-    Tại sao dùng findOne:
-        + findById là hàm có ý nghĩa tìm trường _id
-        + findOne -> cũng tìm ra single document nhưng tìm đa dạng hơn
-    Cho nên sử dụng hàm đúng mục đích của mình.
-    */
-    // console.log('user info', user)
     return res.status(200).json({user})
 };
 
@@ -112,40 +66,16 @@ const getUserDecks = async (req, res, next) => {
 };
 
 const index = async (req, res, next) => {
-    // viết try-catch để bắt lỗi
-    try {
-        const users = await User.find({})
-
-        // throw new Error('Random error!') // tạo lỗi để kiểm tra catch(error) có thực sự hoạt động
-
-        return res.status(200).json({users})
-    } catch (error) {
-        next(error)
-    }
+    const users = await User.find({is_deleted: false})
+    return res.status(200).json({users})
 };
 
-/* Ta tiến hành tạo một user mới, và thông qua phương thức post để đẩy thông tin user lên, 
-tuy nhiên, kết quả sẽ là undefined vì không có config để nodejs nhận được (thông tin json) 
-thông qua POST từ sever của chúng ta. Vì vậy mới cần dùng body-parser.
-*/
-
-// promist method
-// const newUser = (req, res, next) => {
-//     console.log('reg.body content', req.body) // In ra
-
-//     // create object model
-//     const newUser = new User(req.body)
-//     console.log('newUser ', newUser)
-//     newUser.save().then(user => {
-//         console.log('User saved', user)
-//         // res tra ve ngay POST
-//         return res.status(201).json({user})
-//     }).catch(err => {
-//         console.error('Error', err)
-//     });
-// }
-
 const newUser = async (req, res, next) => {
+    const { firstName, lastName, email } = req.value.body
+    console.log(firstName, lastName, email)
+    const foundUser = await User.findOne({ email })
+    if (foundUser) return res.status(403).json( {error: { message: "Email is already in use." }})
+
     const newUser = new User(req.value.body)
     newUser.created_at = nowTime()
     const updateSeq = await Counter.findOneAndUpdate({name: "user"},{"$inc":{seq:1}},{new: true})
@@ -158,27 +88,16 @@ const newUser = async (req, res, next) => {
         newUser._id = updateSeq.seq
     }
     await newUser.save()
+
     return res.status(201).json({user: newUser})
 };
 
 const newUserDeck = async (req, res, next) => {
     const { userID } = req.value.params
-    // Create a new deck
     const newDeck = new Deck(req.value.body)
-    console.log(typeof userID)
-    // Get user
     const user = await User.findById(userID)
+    newDeck.owner = userID
 
-    // Assign user as a decks owner
-    /*
-        Sau quá trình newDeck ở trên, thì object đã trở thành object
-        của mongoDB rồi, nên việc tạo thêm trường mới phải là một trong các
-        trường trong Desk -> Dù có tạo trường khác đi nữa cũng không có tác dụng gì 
-    */
-
-    newDeck.owner = parseInt(userID)
-
-    // getTimeDeck
     newDeck.created_at = nowTime()
 
     const updateSeq = await Counter.findOneAndUpdate({name: "deck"},{"$inc":{seq:1}},{new: true})
@@ -190,18 +109,10 @@ const newUserDeck = async (req, res, next) => {
         newDeck._id = updateSeq.seq
     }
 
-    // add deck to user's deck array ('decks')
     user.decks.push(newDeck)
-
-    // getTimeUser
     user.updated_at = nowTime()
-
-    // Save the user, nguyên nhân lưu lại vì ta mới push một giá trị mới vào -> để mongo có thể biết được
     await user.save()
-
-    // Save the deck
     await newDeck.save()
-    
     return res.status(201).json({deck: newDeck})
 };
 
@@ -226,16 +137,14 @@ const secret = async (req, res, next) => {
 };
 
 const signUp = async (req, res, next) => {    
-    // Nên lấy từng thành phần để tránh lỗi sau này không đáng có
     const { firstName, lastName, email, password } = req.value.body
-
-    // Check if the user has same email
     const foundUser = await User.findOne({ email })
-    if (foundUser) return res.status(403).json( {error: { message: "Email is already in usee." }})
+    
+    if (foundUser) return res.status(403).json({error: { message: "Email is already in use." }})
 
     const newUser = User({ firstName, lastName, email, password })
-
     const updateSeq = await Counter.findOneAndUpdate({name: "user"},{"$inc":{seq:1}},{new: true})
+    
     if (updateSeq == null) {
         const initCounter = Counter({name: "user", seq: 1})
         newUser._id = 1
@@ -248,7 +157,8 @@ const signUp = async (req, res, next) => {
 
     const token = encodedToken(newUser._id)
     res.setHeader('Author', token)
-    return res.status(201).json({user: newUser}) // Không nên trả token vào json -> Làm vậy thì quá nổi bật
+    
+    return res.status(201).json({user: newUser})
 };
 
 const signIn = async (req, res, next) => {
