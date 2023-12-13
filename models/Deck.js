@@ -1,9 +1,6 @@
 const mongoose = require('mongoose')
-
-// schema là một lớp định hình xem connection của một user gồm có những field nào
 const Schema = mongoose.Schema
 
-// Tìm hiểu thêm về schema và decks
 const DeckSchema = new Schema({
     _id: {
         type: Number

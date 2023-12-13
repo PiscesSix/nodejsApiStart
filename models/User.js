@@ -2,10 +2,8 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
 
 const SALT_WORK_FACTOR = 10
-// schema là một lớp định hình xem connection của một user gồm có những field nào
 const Schema = mongoose.Schema
 
-// Tìm hiểu thêm về schema và decks
 const UserSchema = new Schema({
     _id: {
         type: Number
@@ -18,8 +16,8 @@ const UserSchema = new Schema({
     },
     email: {
         type: String,
-        require: true, // Yêu cầu luôn phải có email
-        unique: true, // Yêu cầu email luôn là duy nhất => Trước khi thử tính năng này, remove all documents from the users collection.
+        require: true,
+        unique: true,
         lowercase: true
     },
     password: {
@@ -45,8 +43,6 @@ const UserSchema = new Schema({
     _id: false
 })
 
-
-// Xử lý trước khi lưu
 UserSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next()
   try {
