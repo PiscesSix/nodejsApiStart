@@ -7,7 +7,7 @@ const JWT = require('jsonwebtoken')
 
 const encodedToken = (userID) => {
   return JWT.sign({
-    iss: 'Minh Chi',
+    iss: 'critdog',
     sub: userID,
     iat: new Date().getTime(),
     exp: new Date().setDate(new Date().getDate() + 3)
@@ -22,7 +22,6 @@ const checkUserDele = (req, res, next, user) => {
 
 const nowTime = () => {
     const currentDate = new Date();
-
     return `${currentDate.getDate()}/${currentDate.getMonth()+1}/${currentDate.getFullYear()} -- Time: ${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`
 };
 
@@ -35,6 +34,13 @@ const deleteUser = async (req, res, next) => {
     const user = await User.findById(req.value.params.userID)
     const userDele = checkUserDele(req, res, next, user)
     user.is_deleted = true
+
+    // const listDecks = user.decks
+    // for (const deckID in listDecks) {
+    //   const deck = await Deck.findById(deckID)
+      
+    // }
+
     await user.save()
 
     return res.status(200).json({success: true})
@@ -71,10 +77,13 @@ const index = async (req, res, next) => {
 };
 
 const newUser = async (req, res, next) => {
-    const { firstName, lastName, email } = req.value.body
-    console.log(firstName, lastName, email)
+    const { firstName, lastName, email, password } = req.value.body
     const foundUser = await User.findOne({ email })
-    if (foundUser) return res.status(403).json( {error: { message: "Email is already in use." }})
+    if (foundUser) return res.status(403).json(
+      {error: 
+        { message: "Email is already in use." }
+      }
+    )
 
     const newUser = new User(req.value.body)
     newUser.created_at = nowTime()
@@ -88,6 +97,9 @@ const newUser = async (req, res, next) => {
         newUser._id = updateSeq.seq
     }
     await newUser.save()
+
+    const token = encodedToken(newUser._id)
+    res.setHeader('Author', token)
 
     return res.status(201).json({user: newUser})
 };
@@ -185,6 +197,7 @@ const updateUser = async (req, res, next) => {
 };
 
 module.exports = {
+    checkUserDele,
     deleteUser,
     getUser,
     getUserDecks,

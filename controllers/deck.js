@@ -1,12 +1,7 @@
-/*
-* We can interact with mongoose in three different ways
-* [v] Async (Dùng nếu có trả ra kết quả, return)/await (dùng khi không trả ra kết quả)
-*/
-
-// nên sắp xếp tên hàm theo thứ tự alphabel
 const Deck = require('../models/Deck')
 const User = require('../models/User')
 const Counter = require('../models/Counter')
+
 const nowTime = () => {
     const currentDate = new Date();
     const currentDayOfMonth = currentDate.getDate();
@@ -15,15 +10,12 @@ const nowTime = () => {
     return `${currentDayOfMonth}/${currentMonth+1}/${currentYear} -- Time: ${currentDate.getTime()}`
 }
 
-const checkDeckDele = async (req, res, next, deck) => {
-    if (deck.is_deleted) {
-      throw new Error("User not Exist")
-    }
-    return false
+const checkUserDele = (req, res, next, user) => {
+  if ((user == null) || (user == undefined) || (user.is_deleted)) {
+    throw new Error("User not Exist")
+  };
 }
 
-// Validator for parameters:
-// Nếu sai định dạng của phương thức GET thì không cho hoạt động
 const Joi = require('@hapi/joi');
 const { error } = require('@hapi/joi/lib/base');
 const idSchema = Joi.object().keys({
@@ -48,15 +40,13 @@ const index = async (req, res, next) => {
 }
 
 const newDeck = async (req, res, next) => {
-    // Find owner have deck
     const owner = await User.findById(req.value.body.owner)
-    // Create a new deck
+    const checkUser = checkUserDele(req, res, next, owner)
     const deck = req.value.body
-    delete deck.owner
     deck.owner = owner._id
     const newDeck = new Deck(deck)
-    // Get time
     newDeck.created_at = nowTime()
+
     const updateSeq = await Counter.findOneAndUpdate({name: "deck"},{"$inc":{seq:1}},{new: true})
     if (updateSeq == null) {
         const initCounter = Counter({name: "deck", seq: 1})
@@ -66,10 +56,8 @@ const newDeck = async (req, res, next) => {
         newDeck._id = updateSeq.seq
     }
     await newDeck.save()
-    // Add newly created deck to the actual decks
     owner.decks.push(newDeck._id)
     await owner.save()
-    const checkDele = await checkDeckDele(req, res, next, deck);
     return res.status(201).json({deck: newDeck})
 }
 
@@ -78,7 +66,6 @@ const replaceDeck = async (req, res, next) => {
     const newDeck = req.value.body
     const deck = await Deck.findById(deckID)
     const checkDele = await checkDeckDele(req, res, next, deck);
-    // if put user, remove deck in user's model
     
     const userHaveDeck = await User.findById(deck.owner)
     let index = userHaveDeck.decks.indexOf(deck._id);
@@ -96,7 +83,7 @@ const replaceDeck = async (req, res, next) => {
       await user.save()
     }
     const result = await Deck.findByIdAndUpdate(deckID,newDeck)
-    // getTime
+
     deck.updated_at = nowTime()
     
     await deck.save()
@@ -108,9 +95,8 @@ const updateDeck = async (req, res, next) => {
     const newDeck = req.value.body
     const deck = await Deck.findById(deckID)
     const checkDele = await checkDeckDele(req, res, next, deck);
-    // if put user, remove deck in user's model
     const result = await Deck.findByIdAndUpdate(deckID,newDeck)
-    // getTime
+
     deck.updated_at = nowTime()
     await deck.save()
 
@@ -118,7 +104,6 @@ const updateDeck = async (req, res, next) => {
 }
 
 const deleteDeck = async (req, res, next) => {
-    // Find is_deleted in deck
     const deck = await Deck.findById(req.value.params.deckID)
     if (!deck.is_deleted) {
       deck.is_deleted = true
